@@ -1,0 +1,18 @@
+# backup and autosave files
+*~
+*.bak
+
+# TeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.dvi
+
+# BiBLaTeX auxiliary files
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+prezi/final-portable.zip

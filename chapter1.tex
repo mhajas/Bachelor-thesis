@@ -1,0 +1,32 @@
+\chapter{Štatistické testovanie náhodnosti}
+\label{chap:statistic-tests}
+
+Náhodné čísla zohrávajú dôležitú úlohu v rôznych odvetviach informatiky. Veľkú rolu majú napríklad v kryptografii, pretože cieľom šifrovania dát je aj nemožnosť zistiť, či sú dáta výstupom zo šifrovacej funkcie, alebo len náhodná sekvencia. Aby sme vedeli povedať, či šifrovacia funkcia spĺňa toto kritérium, potrebujeme nástroj, ktorým keď preskúmame dáta zistíme, či sú náhodné alebo nie.
+
+Najrozšírenejší nástroj na testovanie náhodnosti sú tzv. štatistické sady. Každá sada obsahuje testy, ktoré sú potom zoskupené do batérií zostavených z niekoľkých testov. Každý štatistický test skúma požadovanú vlastnosť na vstupných dátach. Z celej batérie sa po získaní výsledku z každého testu vyhodnotí, aká je pravdepodobnosť, či sú vstupné dáta náhodné.
+
+\section{NIST STS}
+\label{sec:sts-nist}
+
+Najznámejšia zo štatistických sád na štatistické testovanie náhodnosti \textit{Statistical Test Suite for Random and Pseudorandom Number Generators for Cryptographic Applications}~\parencite{nist-sts-documentation}, ktorá vznikla v národnom inštitúte štandardov a technológií (NIST), používa vo svojej testovacej sade množinu 15-tich testov, ktoré boli zostavené na základe predstavy o tom, ako by malo náhodné číslo vyzerať. Napríklad pri zápise v binárnej sústave by mal byť počet cifier 1 a 0 približne rovnaký. Niektoré z testov majú dokonca viac variant a parametrov, takže v konečnom dôsledku sa nad dátami spustí niekoľko násobne viac testov. Avšak interpretácia výsledkov nie je triviálna. Každý test sa spustí nad viacerými sekvenciami. Ako výsledok testu, pre každú sekvenciu je hodnota p-value, z intervalu $[0, 1]$, ktorá značí pravdepodobnosť, že by takúto sekvenciu vygeneroval aj naozaj náhodný generátor. Napríklad pre 1000 sekvencii dostaneme ku každému testu 1000 p-values. Na určenie výsledku sa používajú 2 metódy:
+\begin{myItemize}
+	\item \textbf{Uniformné rozloženie p-values po celom intervale $[0, 1]$}\\Skúma sa rovnomerné rozloženie po celom intervale. Interval sa rozdelí na 10 častí a teda v každej časti by malo v našom prípade skončiť približne 100 hodnôt.
+	\item \textbf{Pomer prejdených testov}\\Na určenie výsledku potrebujeme hodnotu hladiny významnosti ($\alpha$) a interval do ktorého musí pomer spadnúť (interval je vypočítaný na základe hodnoty $\alpha$). Každá z 1000 p-value získaná z jedného testu je porovnaná s hodnotou $\alpha$. Ak je hodnota menšia, test pre jednu sekvenciu neprešiel, ak je väčšia, test prešiel. Pomer sekvencií ktoré testami prešli, ku všetkým, by mal ležať vo vypočítanom intervale.
+\end{myItemize}
+Podľa článku \textit{On the Interpretation of Results from the NIST Statistical Test Suite}~\parencite{nist-sts-interpretation-syso} je vysoká pravdepodobnosť, až 80\%, že aj výstup z naozaj náhodného generátora neprejde niekoľkými testami. Autori spomenutého článku ukázali, že dáta sa dajú považovať za náhodné aj vtedy, ak neprejde (to znamená p-value je menšia ako $\alpha$ = 1\%) 6 testov.
+
+\section{Dieharder}
+\label{sec:dieharder}
+Dieharder~\parencite{dieharder} je sada vytvorená Robertom G. Brownom na Duke univerzite za účelom zrýchliť a zjednodušiť spúšťanie testov tak, aby ich mohol rýchlo a jednoducho spustiť každý, kto potrebuje o svojich dátach zistiť, či sú náhodné. Testovacia sada je následníkom Diehard-u~\parencite{diehard}, avšak testy sú upravené a začlenené do rovnakej štruktúry. Taktiež sú do nej pridané testy z iných sád alebo od iných samostatných autorov. Vo verzii 3.31.1 z roku 2003 sa nachádza 31 testov, z toho 17 pochádza z pôvodnej sady diehard, 3 zo sady STS NIST (autori očakávajú, že raz bude obsahovať všetky testy) a zvyšných 11 z rôznych zdrojov, napríklad od samotného autora R. G. Browna.
+
+\section{TestU01}
+\label{sec:testu01}
+Tvorcom Test-U01~\parencite{testu01} je  Pierre L’Ecuyer, ktorý pôsobí na univerzite v Montreale. Táto sada obsahuje množstvo testov, ktoré sa dajú spúšťať rôznymi spôsobmi, či už formou batérií, alebo samostatne. Testy sú implementované v jazyku ANSI C. Knižnica je rozdelená do viacerých modulov, popis modulov je k dispozícii v dokumentácii~\parencite{testu01-documentation}, jedným z nich sú aj testovacie batérie. Sada obsahuje viac batérii testov, každá batéria má svoje určenie.
+\begin{myItemize}
+	\item \textbf{Small crush}\\Vytvorená tak, aby čo najrýchlejšie poskytla výsledok, preto neobsahuje veľa testov. Slúži na testovanie generátorov náhodných čísel.
+	\item \textbf{Crush}\\Narozdiel od Small crush obsahuje viac testov. Zaberie teda viac času, avšak ak všetky testy prejdú, môžme si byť istejší pravdivosťou výsledku. Takisto ako small crash slúži na testovanie generátorov.
+	\item \textbf{Big crush}\\Ešte väčšia a pomalšia batéria ako crush a small crash. 
+	\item \textbf{Alphabit}\\Primárne určená na hardware generátory, na vstupe môže brať aj jeden binárny súbor.
+	\item \textbf{Rabbit}\\Takisto ako Alphabit môže mať ako vstup binárny súbor.
+	\item \textbf{A ďalšie}\\Obsahuje ešte iné batérie, ktoré simulujú batérie spomenuté vyššie, napríklad PseudoDIEHARD, ktorá simuluje batériu DIEHARD~\parencite{diehard}. Alebo batéria FIPS\_140\_2, ktorá napodobňuje STS od NIST.	 
+\end{myItemize}

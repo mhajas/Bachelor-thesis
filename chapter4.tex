@@ -1,0 +1,31 @@
+\chapter{Experimenty}
+\label{chap:experiments}
+
+Hlavným cieľom zavedenia JVM uzlov bolo vylepšiť úspešnosť EACircu. Na otestovanie sme preto museli vyskúšať viacero experimentov, ktoré si predstavíme v tejto kapitole, a porovnať ich s výsledkami, ktoré dosiahol EACirc s bežnými uzlami s rovnakými nastaveniami. 
+
+Autorom výsledkov z EACircu s bežnými uzlami, nie som ja, ale Ľubomír Obrátil, ktorému by som sa chcel za výsledky poďakovať.
+
+\section{Experiment s imitáciou bežných uzlov}
+\label{sec:exp1}
+
+Prvý experiment slúžil najme na overenie, či JVM simulátor funguje korektne.  bolo, nevyužívať hlavnú výhodu JVM simulátora, používanie inštrukcií zo šifrovacej funkcie, ale skúsiť napodobniť bežné uzly, ktoré sa nachádzajú v EACircu. Cieľom bolo dosiahnuť rovnakú úspešnosť ako keby boli použité bežné uzly. Experiment slúžil hlavne na overenie, či JVM simulátor funguje korektne, 
+
+\subsection{Použitý bytecode}
+\label{subsec:exp1-bytecode}
+
+Bytecode pre tento experiment sme museli napísať manuálne, pretože si to vyžadovalo zamyslenie sa nad tým ako funguje každá jedna funkcia z bežných uzlov. Nie pri všetkých funkciách to bolo jednoduché, pretože prístup JVM simulátora, je odlišný od bežného vykonávania uzlov. 
+
+Najväčší problém bol, že bežné uzly fungujú tak, že medzi všetkými vstupmi vykonajú operáciu, napríklad \textit{AND, OR, XOR} atď. Nie je problém nájsť inštrukcie, ktoré vykonajú to isté ako bežné uzly. Problém je, že JVM simulátor vykoná náhodné množstvo inštrukcií, preto bolo treba premyslieť, ako ich vykonať dostatok na to, aby sa zvolená inštrukcia vykonala medzi všetkými vstupmi, teda medzi všetkými hodnotami na zásobníku. Tento problém sa nám naneštastie nepodarilo vyriešiť, preto sme sa snažili aspoň zvýšiť pravdepodobnosť, že sa vykoná minimálne taký počet inštrukcií aký potrebujeme, a to tak, že sme do každej funkcie, napísali viac krát vykonanie konkrétnej inštrukcie, a spoliehame sa na genetiku, že si vyberie dostatok inštrukcií na spracovanie všetkých hodnôt na zásobníku.
+
+Ďalší problém, ktorého výskyt sa ešte znásobil pri použití riešenia z predchádzajúceho odseku, je čo spraviť ak je počet inštrukcií, ktoré sa majú vykonať, väčší ako počet hodnôt na zásobníku. To znamená čo spraviť ak potrebujeme vybrať hodnotu z prázdneho zásobníka. Z tohoto dôvodu sme museli upraviť implementáciu z nasledujúcimi možnosťami.
+
+\begin{myItemize}
+ \item \textbf{Pri vyberaní hodnoty z prázdneho zásobníka vracať 0}\\Avšak toto riešenie sa ukázalo ako nesprávne, pretože napríklad pre inštrukciu \textit{AND}, platí, že ak vykonáme túto operáciu s 0, výsledok bude vždy 0. To znamená, že v prípade jednej hodnoty na zásobníku, vykonávame \textit{AND} s nulou a strácame celý doterajší výpočet.
+ \item \textbf{V prípade prázdneho zásobníka vracať neutrálnu hodnotu}\\Tento spôsob by vyriešil problém predchádzajúceho riešenia, avšak nevýhodou je, že implementácia takéhoto riešenia, by bola zložitejšia a taktiež je zbytočné vykonávať niečo, čo aj tak nebude mať žiadny dôsledok. 
+ \item \textbf{Preskakovať inštrukcie, ktoré nemajú dostatok hodnôt na zásobníku}\\Toto riešenie sa ukázalo ako najlepšie aj čo sa týka výkonu, pretože sa nepočítajú zbytočné výpočty, aj čo sa týka vyriešenia pôvodného problému.  
+\end{myItemize}
+
+Niektoré funkcie sa ale nedajú nahradiť jedinou ekvivalentnou inštrukciou, napríklad \textit{ROTL} alebo \textit{ROTR}, preto sme ich museli nahradiť väčším počtom rôznych inštrukcií, ktoré vykonávajú túto funkciu. V tomto prípade takisto nemôžeme garantovať, že sa vykoná celá funkcia, preto lebo začíname emuláciu od náhodného riadka. Dalo by sa to vyriešiť vykonávaním vždy všetkých inštrukcií vo funkcii, avšak toto riešenie by bolo v rozpore z našou predstavou ako by mal JVM simulátor fungovať, teda vykonávať v uzloch náhodný kus inštrukcií zo šifrovacej funkcie. 
+
+ 
+ 

@@ -1,0 +1,258 @@
+\newif\ifprint
+%\printtrue % comment out to hide answers
+
+\ifprint % print version
+\documentclass[12pt,twoside]{fithesis2}
+\else % pc version
+\documentclass[12pt,oneside]{fithesis2}
+\fi
+
+% ===== LOADING PACKAGES =====
+\usepackage[english, slovak ,czech]{babel}
+% enabling new fonts support (nicer)
+\usepackage{lmodern}
+% setting input encoding
+\usepackage[utf8]{inputenc}
+% setting output encoding
+\usepackage[T1]{fontenc}
+% fithesis2 requires csquotes
+\usepackage{cslatexquotes}
+% set page margins
+\ifprint % print version
+\usepackage[top=3.0cm, bottom=3.5cm, left=2.9cm, right=1.9cm]{geometry}
+\else % pc version
+\usepackage[top=3.0cm, bottom=3.5cm, left=2.4cm, right=2.4cm]{geometry}
+\fi
+% package to make bullet list nicer
+\usepackage{enumitem}
+% math symbols and environments
+\usepackage{mathtools}
+% packages for complex tables
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{dcolumn}
+\usepackage{array}
+% set italics style in floats captions to visually separate them from text
+\usepackage[font=it]{caption}
+% enable page rotation and floats rotation
+\ifprint % print version
+\usepackage[figuresright]{rotating}
+\else % pc version
+\usepackage{pdflscape}
+\fi
+
+%figures
+\usepackage{float}
+\restylefloat{figure}
+
+\addto\captionsczech{
+	\renewcommand{\figurename}{Obrázok.}
+	\renewcommand{\listfigurename}{Zoznam obrázkov}
+	\renewcommand{\listtablename}{Zoznam tabuliek}
+}
+
+% bibliography management
+\usepackage[
+    backend=biber,      % use biber as backend instead of BiBTeX
+    style=alphabetic,   % citation style
+	url=true,           % display urls in bibliography
+	hyperref=auto,      % detect hyperref and create links
+	sortlocale=cs_CZ,
+	bibencoding=UTF8,
+    firstinits=true,    % abbreviate first names to initials
+    maxbibnames=5,      % maxiumim number of authors before making 'et al.'
+    alldates=iso8601,   % set date format to ISO 8601
+]{biblatex}
+
+\bibliography{thesis}
+
+
+
+% setting custom colors for links and table cells
+\usepackage[table]{xcolor}
+\definecolor{dark-red}{rgb}{0.6,0.15,0.15}
+\definecolor{dark-green}{rgb}{0.15,0.4,0.15}
+\definecolor{medium-blue}{rgb}{0,0,0.5}
+% generating hyperlinks in document
+\usepackage{url}
+\usepackage[plainpages=false,   % get the page numbering correctly
+            pdfpagelabels,      % write arabic labels to all pages
+            unicode,           	% allow unicode characters in links
+\ifprint % print version
+            hidelinks,          % hide links
+\else % pc version
+            colorlinks=true,    % use colored links instead of boxed
+\fi
+            linkcolor={dark-red},
+            citecolor={dark-green},
+            urlcolor={medium-blue}
+			]{hyperref}
+% intelligent object references
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+%titles
+\usepackage{titlesec}
+
+\titleformat{\chapter}[display]
+{\bfseries\Large}
+{\filright\MakeUppercase{\chaptertitlename} \Huge\thechapter}
+{1ex}
+{\titlerule\vspace{1ex}\filleft}
+[\vspace{1ex}\titlerule]
+\titleformat{\section}[hang]{
+	\bfseries\Large}
+{} 
+{0em}
+{\hspace{-0.4pt}\LARGE \thesection\hspace{0.6em}}
+
+\titleformat{\subsection}[hang]{
+	\bfseries\Large}
+{} 
+{0em}
+{\Large \thesubsection\hspace{0.6em}}
+
+\makeatletter
+\def\ttl@mkchap@i#1#2#3#4#5#6#7{
+	\ttl@assign\@tempskipa#3\relax\beforetitleunit
+	\vspace{\@tempskipa}
+	\global\@afterindenttrue
+	\ifcase#5 \global\@afterindentfalse\fi
+	\ttl@assign\@tempskipb#4\relax\aftertitleunit
+	\ttl@topmode{\@tempskipb}{
+		\ttl@select{#6}{#1}{#2}{#7}}
+	\ttl@finmarks
+	\@ifundefined{ttlp@#6}{}{\ttlp@write{#6}}}
+\makeatother
+
+% ===== MAIN DOCUMENT SETTINGS =====
+% adjusting hyphenation penalties
+\tolerance=10000
+\hyphenpenalty=500
+% renew command for shorter and nicer underscore
+\renewcommand{\_}{\leavevmode \kern0.0em\vbox{\hrule width0.4em}}
+% space between paragraphs
+\setlength{\parskip}{0.6em plus0.2em minus0.2em}
+% define square symbol
+\newcommand{\squarebullet}{\textcolor{black}{\raisebox{0.15em}{\rule{4pt}{4pt}}}}
+% define new itemize environment with squares and smaller spaces
+\newenvironment{myItemize}{
+  \begin{itemize}[leftmargin=2em,rightmargin=1em,itemsep=0.75\parskip,parsep=0em,topsep=0em,partopsep=0em]
+  \renewcommand{\labelitemi}{\squarebullet}
+  \renewcommand{\labelitemii}{$\diamond$}
+}{
+  \end{itemize}
+}
+% define new enumerate environment with smaller spaces
+\newenvironment{myEnumerate}{
+  \begin{enumerate}[leftmargin=2em,rightmargin=1em,itemsep=0.75\parskip,parsep=0em,topsep=0em,partopsep=0em]
+}{
+  \end{enumerate}
+}
+% FI THESIS settings
+\thesistitle{Rozšírenie frameworku EACirc o simulátor Java bytecodu}
+\thesissubtitle{Bakalárska práca}
+\thesisstudent{Michal Hajas}
+\thesiswoman{false}
+\thesisfaculty{fi}
+\thesisyear{jar 2016}
+\thesisadvisor{Ing. Mgr. et Mgr. Zdeněk Říha, Ph.D}
+\thesislang{sk}
+
+% ===== NEW COMMANDS =====
+% macro for quotes mimicking czech/slovak babel
+% \newcommand\uv[1]{\quotedblbase #1\textquotedblleft}
+% full-page landscape table (print conditioned compilation)
+\newcommand{\fullPageLandscapeTable}[1]{
+\ifprint % print version
+\begin{sidewaystable}
+\else % pc version
+\begin{landscape}
+\begin{table}[p]
+\fi
+\centering
+#1
+\ifprint % print version
+\end{sidewaystable}
+\else % pc version
+\end{table}
+\end{landscape}
+\fi
+}
+% new table column types with flexible width
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+% rotated (one or multi line) table cell
+\newcommand{\rotatedHeader}[2][l]{\rotatebox{90}{\renewcommand{\arraystretch}{0.75}\begin{tabular}[#1]{@{}l}#2\end{tabular}}}
+% shorthands for coloured cells
+\newcommand{\cc}{\cellcolor{black!15}}  % light gray background
+% shorthand for star symbol in tables
+\newcommand{\st}{$^{\star}$}
+% header for results tables
+\newcommand{\resultsTable}[1]{%
+\small
+\begin{tabularx}{23cm}{llr|*{3}{|RRRR}}
+ & & & \multicolumn{4}{c|}{PMN fixed to zero} & \multicolumn{4}{c|}{PMN counter-based} & \multicolumn{4}{c}{PMN truly random} \\
+\begin{tabular}[b]{@{}l}\large\textbf{Cipher}       \\ \scriptsize(official name) \vspace{0.3em} \end{tabular} &
+\begin{tabular}[b]{@{}l}\large\textbf{Folder ID}       \\ \scriptsize(as used in SUPERCOP~\parencite{supercop}) \vspace{0.3em}   \end{tabular} &
+\rotatedHeader{\textbf{TV length}   \\ \scriptsize(bits)} &
+\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
+\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} &
+\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
+\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} &
+\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
+\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} \\ \hline \hline
+#1
+\end{tabularx}%
+}
+
+% ===== NAME MACROS =====
+\newcommand{\eacirc}{EACirc}
+\newcommand{\niststs}{NIST STS}
+\newcommand{\dieharder}{Dieharder}
+\newcommand{\testu}{TestU01}
+\newcommand{\caesar}{CAESAR}
+
+% ===== BEGIN DOCUMENT =====
+\begin{document}
+
+%\FrontMatter
+%\ThesisTitlePage
+
+%\begin{ThesisDeclaration}
+%\DeclarationText
+%\AdvisorName
+%\end{ThesisDeclaration}
+
+%\begin{ThesisThanks}
+%Many thanks to you all.
+
+%\end{ThesisThanks}
+
+%\begin{ThesisAbstract}
+%Abstrakt
+%\end{ThesisAbstract}
+
+%\begin{ThesisKeyWords}
+%Klucove slova
+%\end{ThesisKeyWords}
+
+%\MainMatter
+%\tableofcontents
+
+%\input{uvod}
+\input{chapter1}
+\input{chapter2}
+\input{chapter3}
+\input{chapter4}
+
+
+% ===== APPENDIX AND BIBLIOGRAPHY =====
+\appendix
+
+% include citations not cited specifically
+\nocite{*}
+% print complete bibliography
+\printbibliography[title={Bibliografia}]
+
+\end{document}

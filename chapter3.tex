@@ -1,0 +1,80 @@
+\chapter{Simulátor Java bytecodu}
+\label{chap:eacirc-jvmsim}
+
+V tejto kapitole si predstavíme nový typ uzlov, ktoré nevykonávajú iba jednoduchú funkcionalitu (napr. \textit{AND, OR, XOR}), ale emulujú časť z dissasemblovaného Java bytecodu. Dôvod bol spomenutý už v predchádzajúcej kapitole v \hyperref[sec:nodes]{sekcii 2.3}. Zjednodušene potrebujeme pomôcť genetike, aby mohla čo najjednoduchšie vytvoriť výsledný obvod, ktorý bude mať čo najlepšiu úspešnosť. Základná myšlienka je taká, že obvod, ktorý v uzloch vykonáva inštrukcie, ktoré boli vybrané z implementácie kryptografickej funkcie, by mal mať vyššiu šancu rozlíšiť medzi náhodnými dátami a výstupom z tejto funkcie.\footnote{V porovnaní s EACircom, ktorý používa bežné uzly.} Jedným z hlavných cieľov tejto bakalárskej práce je overiť, či je táto myšlienka pravdivá. 
+
+\section{Motivácia za použitím Java bytecodu}
+\label{sec:java-bytecode}
+
+Java je na jednu stranu vysoko úrovňový jazyk, čo znamená, že je jednoduchší na učenie a tým pádom aj rozšírenejší, no na druhú stranu je jednoduché z neho dostať nízko úrovňový binárny kód, ktorý sa dá interpretovať. Vďaka jej rozšírenosti  by mala byť samozrejmosťou dostupnosť implementácie množstva pseudo náhodných generátorov a šifrovacích funkcií. Z tohoto pohľadu sa Java javí ako veľmi dobrý jazyk pre použitie popísané v tejto kapitole.
+
+\section{Vysvetlenie skratky JVM (Java Virtual Machine)}
+\label{sec:jvm}
+
+Work in progress (Treba najst nejaku knizku o JVM) 
+
+\begin{myItemize} 
+\item vysvetlenie co je to bytecode
+\item popis realneho fungovania emulacie bytecodu?
+\end{myItemize}
+
+\section{Princíp fungovania emulácie}
+\label{sec:jvm-principle}
+
+Fungovanie JVM simulátora je zložitý proces, ktorý sa skladá z viacerých bodov, avšak nie je to súvislý proces, jedná sa iba o obsluhu JVM uzlov. Zvyšok EACircu funguje tak ako pri bežných uzloch. V tejto kapitole si prejdeme celý proces krok po kroku, od zvolenia uzlu za JVM uzol až po vykonávanie konkrétnych inštrukcií a výpočet výsledku. 
+
+\subsection{Načítavanie bytecodu}
+\label{parsing-bytecode}
+
+Na začiatku behu EACircu sa musí JVM simulátor nainicializovať, čoho súčasťou je načítavanie bytecodu zo súboru. Funkcie a inštrukcie z tohoto súboru sa budú používať počas celého jedného behu. Jeho názov je uložený v konfiguračnom súbore v elemente \textit{JVM\_FILENAME}. Každá funkcia je následne uložená v spojovanom zozname a má priradené unikátne číslo a jej prislúchajúce inštrukcie. Takýmto spôsobom sa postupne načíta celý bytecode. Ak sa pri načítavaní vyskytne nejaká chyba, napríklad neznáma inštrukcia alebo zlá štruktúra bytecodu, vypíše sa chyba a vykonávanie programu skončí.
+
+V bytecode existuje množstvo inštrukcií. Niektoré z inštrukcií vyžadujú na svoje vykonanie aj argumenty, preto sa v štruktúre nachádza aj možnosť uloženia až dvoch argumentov. Napríklad inštrukcia \textit{BIPUSH}, má ako argument číslo, ktoré pri vykonávaní vloží na zásobník.
+
+\subsection{JVM uzly a voľba parametrov}
+\label{subsec:jvm-nodes}
+
+Každý uzol v EACircu obsahuje 4 Bytovú informáciu (\hyperref[sec:nodes]{sekcia 2.3}). JVM uzol využíva celé 4 Byty a to nasledovne: \vspace{0pt}
+
+\begin{myItemize}
+	\item 1. Byte: tu je uložené, že sa jedná o JVM uzol, v súčastnosti číslo 19,
+	\item 2. Byte: číslo funkcie, ktorej inštrukcie sa budú vykonávať,
+	\item 3. Byte: číslo riadka, na ktorom sa nachádza inštrukcia, od ktorej sa začína výpočet,
+	\item 4. Byte: počet inštrukcií, koľko sa má vykonať. To znamená, že sa vykonávajú inštrukcie od tej na riadku z parametru číslo 3 po inštrukciu na riadku, ktorý vznikne spočítaním 3. a 4. parametra. Toto obmedzenie však neplatí pri vykonávaní funkcie zavolanej špeciálnymi inštrukciami \textit{INVOKE}\footnote{Medzi inštrukcie \textit{INVOKE} patria: \textit{INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL}.} (viac v \hyperref[subsec:emulating-ins]{podsekcii 3.3.3}). 
+\end{myItemize}
+
+Pri tvorbe obvodu sa pri každom uzle EACirc náhodne rozhoduje, akú funkciu bude plniť. Do EACircu bola doplnená funkcia, ktorá sa volá v prípade, že voľba vyberie, že sa jedná o JVM uzol. Táto funkcia do uzla dopĺňa parametre, popísané vyššie. Parametre sa nemôžu voliť náhodne z toho dôvodu, že každý JVM uzol, ktorý sa nakoniec bude nachádzať v obvode, musí byť validný. To znamená funkcia s číslom v parametri 2 musí existovať aj so začiatočnou inštrukciou a dostatkom inštrukcií na vykonávanie podľa posledných dvoch parametrov.
+
+\subsection{Vykonávanie inštrukcií} 
+\label{subsec:emulating-ins}
+
+Tak ako reálny Java virtual machine aj JVM simulátor obsahuje zásobník. Na začiatku sa naň vložia všetky vstupy, ktoré vykonávaný uzol má. Okrem zásobníka obsahuje aj štruktúru, ktorá určuje stav procesora, teda ktorá funkcia sa vykonáva a na ktorom riadku. Pri požiadavke na vykonanie JVM uzlu sa najprv vyplní táto štruktúra tak, že obsahuje pointer na funkciu a číslo prvej inštrukcie, ktoré sa vybralo z 3 parametru uzlu. Následne sa v slučke emulujú všetky ostatné inštrukcie, s tým, že po každom úspešnom behu sa číslo inštrukcie zdvihne o jedna. 
+
+Existujú však aj špeciálne inštrukcie, po vykonaní ktorých sa nepokračuje bežnou cestou, teda pokračovaním na ďalšiu inštrukciu. Napríklad inštrukcie, ktoré preskakujú na iné inštrukcie v rámci funkcie. Jednou z nich je \textit{IF\_ICMPGE}, avšak existuje veľa podobných inštrukcií\footnote{Sú to napríklad: \textit{IFEQ, IFNE, IFGE, IFLE, IF\_ICMPGE, IF\_ICMPLE, IF\_ICMPNE, IF\_ICMPEQ, IF\_ICMPLT, IF\_ICMPGT, IF\_ACMPEQ}.} na vetvenie programu, kde sa po splnení podmienky skáče na konkrétnu inštrukciu, ktorej číslo sa nachádza v argumente inštrukcie. Alebo inštrukcia \textit{GOTO}, ktorá automaticky preskočí na požadované miesto. Ďalšie špeciálne inštrukcie sú tie začínajúce na \textit{INVOKE}\footnote{Medzi inštrukcie \textit{INVOKE} patria: \textit{INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL}.}, po ktorých sa síce pokračuje na ďalšiu inštrukciu, avšak až po vykonaní všetkých inštrukcií inej funkcie, ktorá je špecifikovaná v argumentoch inštrukcie.
+
+\subsection{Výsledok uzlu}
+
+Po vykonaní všetkých inštrukcií je výsledkom uzlu \textit{XOR} hodnôt na zásobníku. 
+
+\section{Problémy spojené s implementáciou}
+\label{sec:problems}
+
+Jeden z problémov je nemožnosť uložiť do uzlu viac ako 4B informácie. Keďže prvý Byte je rezervovaný na funkciu, pre naše účely ostávajú iba 3 Byty. Po rozdelení máme teda pre každý z troch parametrov, spomenutých v \hyperref[subsec:jvm-nodes]{podsekcii 3.3.2}, rozsah [0-255], avšak funkcie v bytecode majú často niekoľko násobne viac inštrukcií. S týmto rozdelením sme schopní vykonať maximálne 255 inštrukcií, a zároveň začať maximálne na riadku 255. Existuje však aj výnimočná situácia, ktorá je prebraná v ďalšom odstavci, kedy je možné vykonať viac ako 255 inštrukcií. V bežnom prípade je teda posledná inštrukcia, ktorú dokážeme vykonať na riadku 510, čo znamená, že akákoľvek inštrukcia za ňou nemôže byť nikdy vykonaná. V súčasnej dobe sa však prerába celá genetika v rámci EACircu a v novej implementácii by mal tento problém zaniknúť, pretože by malo byť v uzle viac miesta pre parametre.
+
+S predchádzajúcim problémom súvisí aj časová náročnosť pri veľkom množstve vykonávaných inštrukcií. EACirc počas jedného behu spracuje veľké množstvo uzlov, preto časová náročnosť rastie pri väčšom množstve vykonávaných inštrukcií veľmi rýchlo. Keďže sa môže vyskytnúť situácia kedy sa môže vykonať aj viac ako 255 inštrukcií, napríklad kvôli inštrukcii \textit{GOTO}, kedy sa stáva, že sa program zacyklí tým, že donekonečna preskakuje niekam nad aktuálnu inštrukciu, tak bolo potrebné limitovať maximálny počet vykonaných inštrukcií na 300. Takisto inštrukcie \textit{INVOKE}\footnote{Medzi inštrukcie \textit{INVOKE} patria: \textit{INVOKESPECIAL, INVOKESTATIC, INVOKEVIRTUAL}.}, môžu zväčšiť počet vykonaných inštrukcií na viac ako 255, a preto je aj v tomto prípade nastavený maximálny počet vykonaných inštrukcií na 300. 
+
+\section{Implementačné rozdiely medzi skutočným JVM a našim JVM}
+\label{sec:impl-diff}
+
+Náš JVM simulátor neobsahuje úplne celú funkcionalitu, ktorá je obsiahnutá v originálnom JVM. Dôvodom je, že nie všetky inštrukcie boli pre nás výhodné na implementáciu, čo sa týka pomeru vynaloženého úsilia a pridanej hodnoty. Preto sa niektoré inštrukcie vždy preskakujú. Napríklad sme úplne vyradili prácu s poľami a objektami. Inštrukcie, ktoré sa preskakujú sú vypísané v prílohe.
+
+\section{Výhody prístupu}
+\label{sec:advantages}
+
+Okrem výhody používať na rozlišovanie dát priamo inštrukcie z ich generátora, je najväčšou výhodou možnosť skonštruovať naozaj komplexný obvod zložený zo zložitejších častí. Otázkou ale je, či je genetika natoľko silná, aby bola schopná zložiť takéto komplexné obvody, pretože s použitím JVM simulátora je naozaj mnohonásobne viac možností ako výsledný obvod poskladať. Preto je ďalšou otázkou aj to, či pre JVM obvody nie je potrebné viac času, a teda viac generácií, na hľadanie výsledného obvodu.
+
+\section{Nevýhody JVM uzlov}
+\label{sec:disadvantages}
+
+Najväčšou nevýhodou je dĺžka výpočtu, avšak je očakávateľná, pretože sa v uzloch vykonávajú časovo zložitejšie výpočty, zatiaľ čo bežný uzol sa dá prirovnať k jednej inštrukcii, JVM simulátor ich vykonáva viac. S vykonávaním inštrukcií je spojená aj réžia, ako napríklad kontrola hodnôt na zásobníku alebo maximálneho počtu inštrukcií. Takže v konečnom dôsledku je jeden beh mnohonásobne dlhší, ako beh z bežnými uzlami.
+
+Niektoré inštrukcie, napríklad \textit{IADD}, ktorá vyberie zo zásobníka dve čísla, spočíta ich a výsledok vloží na zásobník, vyžadujú niekoľko hodnôt na zásobníku, a nie vždy sa tam tieto hodnoty vyskytujú. Z tohoto dôvodu sa stáva, že sa inštrukcie musia preskočiť. To znamená, že ak je zásobník prázdny, žiadna inštrukcia vyžadujúca hodnoty na zásobníku sa nevykoná. Avšak tento nedostatok sa nedá vyriešiť jednoduchou cestou, pretože je spôsobený vykonávaním náhodných inštrukcií, mnohokrát aj zo stredu funkcie. Môže sa teda stať, že vo veľa uzloch sa nevykoná vôbec nič. Potencionálne však máme možnosť vytvoriť zložitý obvod aj keď niekoľko uzlov nerobí nič. Iný pohľad na vec je, že aj obvody, v ktorých je veľa takýchto uzlov, môžu mať v konečnom dôsledku vysokú úspešnosť čo sa týka rozoznávania náhodných dát, preto je len na genetike, aby si vybrala ten správny prístup. 
