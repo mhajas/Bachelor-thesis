@@ -8,7 +8,7 @@ Autorom výsledkov z EACircu s bežnými uzlami, nie som ja, ale Ľubomír Obrá
 \section{Experiment s imitáciou bežných uzlov}
 \label{sec:exp1}
 
-Prvý experiment slúžil najme na overenie, či JVM simulátor funguje korektne.  bolo, nevyužívať hlavnú výhodu JVM simulátora, používanie inštrukcií zo šifrovacej funkcie, ale skúsiť napodobniť bežné uzly, ktoré sa nachádzajú v EACircu. Cieľom bolo dosiahnuť rovnakú úspešnosť ako keby boli použité bežné uzly. Experiment slúžil hlavne na overenie, či JVM simulátor funguje korektne, 
+Prvý experiment slúžil najme na overenie, či JVM simulátor funguje korektne.  bolo, nevyužívať hlavnú výhodu JVM simulátora, používanie inštrukcií zo šifrovacej funkcie, ale skúsiť napodobniť bežné uzly, ktoré sa nachádzajú v EACircu. Cieľom bolo dosiahnuť rovnakú úspešnosť ako v prípade keď boli použité bežné uzly. Experiment slúžil hlavne na overenie, či JVM simulátor funguje korektne.
 
 \subsection{Použitý bytecode}
 \label{subsec:exp1-bytecode}
@@ -27,5 +27,289 @@ Najväčší problém bol, že bežné uzly fungujú tak, že medzi všetkými v
 
 Niektoré funkcie sa ale nedajú nahradiť jedinou ekvivalentnou inštrukciou, napríklad \textit{ROTL} alebo \textit{ROTR}, preto sme ich museli nahradiť väčším počtom rôznych inštrukcií, ktoré vykonávajú túto funkciu. V tomto prípade takisto nemôžeme garantovať, že sa vykoná celá funkcia, preto lebo začíname emuláciu od náhodného riadka. Dalo by sa to vyriešiť vykonávaním vždy všetkých inštrukcií vo funkcii, avšak toto riešenie by bolo v rozpore z našou predstavou ako by mal JVM simulátor fungovať, teda vykonávať v uzloch náhodný kus inštrukcií zo šifrovacej funkcie. 
 
+\subsection{Výsledky experimentu}
+\label{subsec:exp1-results}
+
+Takto vytvorený bytecode sme použili na rozlíšenie medzi náhodnými dátami a hašovacou funkciou Tangle. Výsledky nepochádzajú z poslednej verzie JVM simulátora, pretože sme ich počítali už pár mesiacov pred napísaním tejto práce. Sivé zafarbenie bunky znamená, že EACirc bol úspešný vo viac prípadoch ako je hladina významnosti, teda 5\%, to znamená číslo vo vnútri bunky je väčšie ako 0.05. Je otázne, či takto označovať aj bunky, ktoré majú tesne nad 5\%, napríklad 0.55 alebo 0.6, pretože sa môže jednať aj o štatistickú odchýlku, preto sme sa rozhodli, že takto budeme označovať len bunky, ktoré budú mať hodnotu nad 0.07. 
  
- 
+\vspace{1em}
+ \begin{table}[h]
+\begin{tabularx}{\textwidth}{|C||C|C|C|}
+	\hline
+	\multicolumn{4}{|c|}{\textbf{Výsledky pre hašovaciu funkciu Tangle}} \\
+	\hline \hline
+	\vspace{0.1em}
+	\textbf{Počet rúnd} &
+	\vspace{0.1em}
+	\begin{tabular}[b]{@{}c}\large\textbf{Bežné uzly} \\ \scriptsize(30000 generácií) \end{tabular} &
+	
+	\vspace{0.1em}
+	\begin{tabular}[b]{@{}c}\large\textbf{JVM simulátor} \\ \scriptsize(30000 generácií) \end{tabular} &
+		\vspace{0.1em}
+		\begin{tabular}[b]{@{}c}\large\textbf{JVM simulátor} \\ \scriptsize(300000 generácií) \end{tabular} \\
+	\hline\hline
+	21 & 0.944\cc & 0.270\cc & 0.461\cc \\
+	\hline
+	22 & 0.932\cc & 0.267\cc & 0.465\cc \\
+	\hline
+	23 & 0.066 & 0.036 & 0.050 \\
+	\hline
+	
+\end{tabularx}
+\caption{Výsledky pre hašovaciu funkciu Tangle pri použití rôznych uzlov.}
+\label{tab:exp1}
+\end{table}
+
+Z výsledkov vyplýva, že JVM simulátor síce dokázal rozoznať tie isté rundy ako bežné uzly, avšak s menšou istotou. To znamená, napríklad pre rundu 21, že zatiaľ čo bežné uzly boli schopné v 94\% prípadoch nájsť hľadaný obvod, EACirc s JVM uzlami bol to isté schopný spraviť len v 27\% prípadoch. Dôvodom menšej úspešnosti sú zrejme nevyriešené problémy spomenuté vyššie.
+
+Pri výpočte na 300000 generáciách bolo EACircu poskytnuté 10 krát viac času na hľadanie obvodu, čiže očakávame lepšie výsledky. Avšak ani v tomto prípade, nebol EACirc s JVM uzlami schopný dotiahnuť sa na výsledky, ktoré mali bežné uzly, preto sme sa rozhodli pokračovať v testovaní na ďalší experiment v ktorom už budý použité bytecody zo šifrovacích respektíve hašovacích funkcií.
+
+\section{Experiment JVM simulátora na malom testbede}
+\label{sec:exp2}
+
+Malý testbed je označenie, ktoré používame v našom tíme, na pomenovanie niekoľkých funkcií. Do malého testbedu patria hašovacie funkcie: \textit{Tangle, Dynamic SHA, Dynamic SHA-2} a prúdová šifrovacia funkcia z kandidátov eStream: \textit{Decim}. Experiment spočíval v tom, že sme z týchto všetkých funkcií vytvorili bytecode a spustili všetky kombinácie výpočtov. Teda každú funkciu v kombinácii s každým bytecodom. Motivácia za týmto experimentom je zistiť, či bude EACirc úspešnejší, keď bude v uzloch vykonávať inštrukcie zo skúmanej šifrovacej funkcie. 
+
+\section{Použité bytecody}
+\label{sec:exp2-bytecode}
+
+Naneštastie sa nám nepodarilo nájsť implementáciu ani jednej z týchto funkcií v Jave, preto sme museli vytvoriť vlastnú. Najjednoduchšie riešenie pre nás bolo prepísať implementáciu z C++, ktorá je dostupná napríklad aj priamo v EACircu, do Javy. K prepisu nám pomohla voľná verzia  konvertoru~\parencite{c++-java-converter} z C++ do Javy, od spoločnosti \textit{Tangible Software Solutions Inc}. Po konvertovaní sme museli ešte manuálne upraviť Java súbor tak, aby bol kompilovateľný, pretože niektoré konštrukcie z C++ sa nedali automaticky prepísať do Javy, napríklad práca s pamäťou alebo smerníková aritmetika. Takáto implementácia by pravdepodobne nebola funkčná ani korektná, ale na naše účely, teda na využitie inštrukcií, je postačujúca. 
+
+Takto vytvorenú implementáciu sme potom jednoducho skompilovali a zo skompilovaného súbory získali konkrétne inštrukcie. Vzniknutý súbor s bytecodom bolo ešte treba upraviť, aby si s ním poradila funkcia na načítavanie bytecodu, ktorú obsahuje JVM simulátor. Posledným krokom bolo implementovanie inštrukcií, ktoré JVM simulátor zatiaľ nepoznal, pretože inak by načítavanie zlyhalo.
+
+\section{Výsledky experimentu}
+\label{sec:exp2-results}
+
+Pre každú funkciu sme spočítali 3 rundy, teda poslednú rundu, ktorú zvládne EACirc s bežnými uzlami plus nasledujúca a predchádzajúca. Pre každú rundu sme počítali kombináciu s každým bytecodom, dohromady teda 4 výpočty na každú rundu, pretože máme 4 bytecody. To znamená, že dohromady sme mali 12 rôznych výpočtov pre každú funkciu. Každý z 12-tich výpočtov sme spustili 1000 krát to znamená dovedna sme mali pre jednu funkciu 12000 behov EACircu. Výpočty sme počítali na metacentre~\parencite{metacentrum}, kde sa behy spúšťajú v rámci tzv. úloh. V rámci jednej úlohy sme vypočítali 8 behov za dva dni, záležalo na akom stroji sa úloha počítala, niektoré zvládli všetkých 8 behov za 10 hodín a niektorým to trvalo aj 30 hodín. To znamená, že sme potrebovali, pre jednu funkciu, spočítať 1500 úloh, čo sme boli schopný vďaka metacentru urobiť za 2 až 3 dni, pretože nám naraz priradili až 800 procesorov. 
+
+Pre výsledky platí to isté čo v predchádzajúcom experimente, šedo podfarbené bunky znamenajú, že EACirc bol úspešný a našiel obvod vo viac ako 5\%-tách prípadov, plus štatistická odchýlka.
+
+\resultsTable
+{Výsledky pre funkciu Tangle}
+{
+	21 & 0.944\cc & 0.605\cc & 0.609\cc & 0.643\cc & 0.453\cc \\
+	\hline
+	22 & 0.932\cc & 0.640\cc & 0.606\cc & 0.666\cc & 0.461\cc \\
+	\hline
+	23 & 0.066 & 0.045 & 0.058 & 0.040 & 0.051 \\
+}
+{Výsledky pre funkciu Tangle, prvý riadok určuje aký bytecode bol použitý.}
+{tab:exp2-tangle}
+
+
+
+\resultsTable
+{Výsledky pre funkciu Dynamic SHA}
+{
+	7 & 1.000\cc & 0.996\cc & 0.998\cc & 1.000\cc & 0.899\cc \\
+	\hline
+	8 & 1.000\cc & 1.000\cc & 1.000\cc & 1.000\cc & 0.631\cc \\
+	\hline
+	9 & 1.000\cc & 1.000\cc & 1.000\cc & 1.000\cc & 0.616\cc \\
+}
+{Výsledky pre funkciu Dynamic SHA, prvý riadok určuje aký bytecode bol použitý.}
+{tab:exp2-dynamic-sha}
+
+Výpočet z \hyperref[tab:exp2-dynamic-sha]{tabuľky 4.3} je trochu sporný, pretože EACirc je schopný rozlíšiť všetky rundy funkcie \textit{Dynamic SHA}, ktoré existujú, zatiaľ čo štatistické sady (\hyperref[chap:statistic-tests]{kapitola 1.}) sú schopné rozoznať funkciu len po rundu 7. To znamená, že buď je funkcia zlá v niečom čo štatistické testy netestujú, alebo sa v implementácii EACircu nachádza chyba, ktorú sme prehliadli. 
+
+\resultsTable
+{Výsledky pre funkciu Dynamic SHA-2}
+{
+	10 & 1.000\cc & 1.000\cc & 1.000\cc & 1.000\cc & 1.000\cc \\
+	\hline
+	11 & 0.986\cc & 0.967\cc & 0.877\cc & 0.901\cc & 0.753\cc \\
+	\hline
+	12 & 0.059 & 0.056 & 0.042 & 0.057 & 0.053 \\
+}
+{Výsledky pre funkciu Dynamic SHA-2, prvý riadok určuje aký bytecode bol použitý.}
+{tab:exp2-dynamic-sha-2}
+
+\resultsTable
+{Výsledky pre funkciu Decim}
+{
+	4 & 0.998\cc & 0.137\cc & 0.209\cc & 0.203\cc & 0.114\cc \\
+	\hline
+	5 & 0.802\cc & 0.073\cc & 0.095\cc & 0.079\cc & 0.053 \\
+	\hline
+	6 & 0.065 & 0.045 & 0.046 & 0.056 & 0.048 \\
+}
+{Výsledky pre funkciu Decim, prvý riadok určuje aký bytecode bol použitý.}
+{tab:exp2-decim}
+
+Výsledky z tabuliek \hyperref[tab:exp2-tangle]{4.2} až \hyperref[tab:exp2-decim]{4.5}, sú jemne chaotické, nenašli sme v nich žiadnu spojitosť medzi skúmanou funkciou a použitým bytecodom. Ba dokonca ani jeden z bytecodov sa nedá vyhlásiť za najlepší. Avšak pozitívne je, že narozdiel od \hyperref[sec:exp1]{experimentu 1} dosiahli JVM uzly porovnateľné výsledky vo väčšine prípadov, ako bežné uzly. Najhoršie výsledky sme dosiahli v prípade funkcie Decim, preto sme sa rozhodli, že na tejto funkcii vyskúšame výpočty s viac generáciami. Počet generácií sme zvolili na 300000, to znamená, že každý beh EACircu, bude trvať 10 násobne dlhšie. Z dôvodu veľmi dlhého výpočtu, sme museli znížiť počet behov z 1000 na 400. 
+
+\begin{table}[h]
+	
+	\renewcommand{\arraystretch}{1.2}
+	
+	\begin{tabularx}{\textwidth}{|C||C|C|C|C|}
+		\hline
+		\multicolumn{5}{|c|}{\textbf{Výsledky pre Decim s použitím 300000 generácií}} \\
+		\hline \hline
+		\vspace{5pt}
+		\textbf{Runda} &
+		\vspace{0pt}
+		\begin{tabular}[b]{@{}c}\small\textbf{Tangle} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{-10pt}
+		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{-10pt}
+		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA-2} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{0pt}
+		\begin{tabular}[b]{@{}c}\small\textbf{Decim} \\ \scriptsize(proportion) \end{tabular} \\
+		\hline\hline
+		4 & TBD & TBD & TBD & TBD \\
+		\hline
+		5 & TBD & TBD & TBD & TBD \\
+		\hline
+		6 & TBD & TBD & TBD & TBD \\
+		\hline
+		
+	\end{tabularx}
+	\caption{Výsledky pre funkciu Decim s použitím 300000 generácií, prvý riadok určuje aký bytecode bol použitý.}
+	\label{tab:exp2-decim-300k}
+\end{table}
+
+\hyperref[tab:exp2-decim-300k]{Tabuľka 4.6} neobsahuje výsledky pre bežné uzly, pretože bežné uzly sme nepočítali na 300000 generácií, výsledky sa dajú porovnať s výsledkami s \hyperref[tab:exp2-decim]{tabuľkou 4.5}, konkrétne stĺpec z označením bežné uzly, avšak treba brať na vedomie, že bežné uzly mali na hľadanie obvodu 10-krát menej času.
+
+Zhrnutie výsledkov, po dopočítaní výpočtov.
+
+\section{Výpočty zo zložitejším bytecodom}
+\label{sec:exp3}
+
+Ďalší a zároveň posledný experiment, ktorý sme vyskúšali, bolo použiť v JVM simulátore bytecode, ktorý obsahuje zložitejšie konštrukcie. Otázkou teda je, či bude genetika schopná využiť takéto konštrukcie na zhotovenie lepších obvodov. Na vytvorenie bytecodu sme použili implementáciu šifrovacej funkcie AES~\parencite{AES-FIPS}.
+
+
+Nastavenia pre tento experiment, boli rovnaké ako v \hyperref[sec:exp2]{experiemente 2.} teda 30000 generácií, 1000 testovacích vektorov a 1000 behov. Takisto sme pre funkciu Decim spočítali aj verziu s 300000 generáciami a 400 behmi. 
+	\begin{table}[h]
+\twoColumns{		
+		\renewcommand{\arraystretch}{1.2}
+		
+		\begin{tabularx}{7.3cm}{|C||C|}
+			\hline
+			\multicolumn{2}{|c|}{\textbf{Tangle}} \\
+			\hline \hline
+	
+			\textbf{Runda} &
+	
+			\textbf{Proportion} \\
+			\hline\hline
+			21 & 0.574\cc \\
+			\hline
+			22 & 0.578\cc \\
+			\hline
+			23 & 0.049  \\
+			\hline
+			
+		\end{tabularx}
+		\caption{Výsledky pre funkciu Tangle s použitím bytecodu z funckie AES.}
+		\label{tab:exp3-tangle}
+		
+		\begin{tabularx}{7.3cm}{|C||C|}
+			\hline
+			\multicolumn{2}{|c|}{\textbf{Dynamic SHA-2}} \\
+			\hline \hline
+			
+			\textbf{Runda} &
+			
+			\textbf{Proportion} \\
+			\hline\hline
+			10 & 1.000\cc \\
+			\hline
+			11 & 0.957\cc \\
+			\hline
+			12 & 0.056  \\
+			\hline
+			
+		\end{tabularx}
+		\caption{Výsledky pre funkciu Dynamic SHA-2 s použitím bytecodu z funckie AES.}
+		\label{tab:exp3-dynamic-sha-2}
+}{
+		\renewcommand{\arraystretch}{1.2}
+		
+		\begin{tabularx}{7.3cm}{|C||C|}
+			\hline
+			\multicolumn{2}{|c|}{\textbf{Dynamic SHA}} \\
+			\hline \hline
+			
+			\textbf{Runda} &
+			
+			\textbf{Proportion} \\
+			\hline\hline
+			7 & 0.977\cc \\
+			\hline
+			8 & 0.985\cc \\
+			\hline
+			9 & 0.992\cc  \\
+			\hline
+			
+		\end{tabularx}
+		\caption{Výsledky pre funkciu Dynamic SHA s použitím bytecodu z funckie AES.}
+		\label{tab:exp3-dynamic-sha}
+		
+		\begin{tabularx}{7.3cm}{|C||C|}
+			\hline
+			\multicolumn{2}{|c|}{\textbf{Decim}} \\
+			\hline \hline
+			
+			\textbf{Runda} &
+			
+			\textbf{Proportion} \\
+			\hline\hline
+			4 & 0.640\cc \\
+			\hline
+			5 & 0.187\cc \\
+			\hline
+			6 & 0.056  \\
+			\hline
+			
+		\end{tabularx}
+		\caption{Výsledky pre funkciu Decim s použitím bytecodu z funckie AES.}
+		\label{tab:exp3-decim}
+}
+
+	\vspace{15pt}
+	\begin{tabularx}{\textwidth}{|C||C|}
+		\hline
+		\multicolumn{2}{|c|}{\textbf{Decim - 300000 generácií}} \\
+		
+		\hline \hline
+		
+		\textbf{Runda} &
+		
+		\textbf{Proportion} \\
+		\hline\hline
+		4 & TBD \\
+		\hline
+		5 & TBD \\
+		\hline
+		6 & TBD  \\
+		\hline
+		
+	\end{tabularx}
+	\caption{Výsledky pre funkciu Decim s použitím bytecodu z funckie AES a počtom generácií 300000.}
+	\label{tab:exp3-decim-300k}
+
+\end{table}
+
+Z tabuliek \hyperref[tab:exp3-tangle]{4.7} až \hyperref[tab:exp3-decim-300k]{4.11} vyplýva, že EACirc s bytecodom z funkcie AES sa úspešnosťou vyrovnáva použitím bytecodu z funkcií v predchádzajúcom \hyperref[sec:exp2]{experimente} až na funkciu Decim kde je výrazne lepší, avšak stále sa nevyrovnáva úspešnosti bežných uzlov (\hyperref[tab:exp2-decim]{tabuľka 4.5}). Z toho vyplýva, že môžeme potvrdiť, že použitie zložitejšieho bytecodu je pre genetiku v niektorých prípadoch výhodné.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

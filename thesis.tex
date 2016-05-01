@@ -50,6 +50,7 @@
 	\renewcommand{\figurename}{Obrázok.}
 	\renewcommand{\listfigurename}{Zoznam obrázkov}
 	\renewcommand{\listtablename}{Zoznam tabuliek}
+	\renewcommand{\tablename}{Tabuľka}
 }
 
 % bibliography management
@@ -185,26 +186,58 @@
 % rotated (one or multi line) table cell
 \newcommand{\rotatedHeader}[2][l]{\rotatebox{90}{\renewcommand{\arraystretch}{0.75}\begin{tabular}[#1]{@{}l}#2\end{tabular}}}
 % shorthands for coloured cells
-\newcommand{\cc}{\cellcolor{black!15}}  % light gray background
+\newcommand{\cc}{\cellcolor{black!10}}  % light gray background
 % shorthand for star symbol in tables
 \newcommand{\st}{$^{\star}$}
 % header for results tables
-\newcommand{\resultsTable}[1]{%
+\newcommand{\resultsTable}[4]{%
 \small
-\begin{tabularx}{23cm}{llr|*{3}{|RRRR}}
- & & & \multicolumn{4}{c|}{PMN fixed to zero} & \multicolumn{4}{c|}{PMN counter-based} & \multicolumn{4}{c}{PMN truly random} \\
-\begin{tabular}[b]{@{}l}\large\textbf{Cipher}       \\ \scriptsize(official name) \vspace{0.3em} \end{tabular} &
-\begin{tabular}[b]{@{}l}\large\textbf{Folder ID}       \\ \scriptsize(as used in SUPERCOP~\parencite{supercop}) \vspace{0.3em}   \end{tabular} &
-\rotatedHeader{\textbf{TV length}   \\ \scriptsize(bits)} &
-\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
-\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} &
-\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
-\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} &
-\rotatedHeader{\textbf{\eacirc{}}    \\ \scriptsize(proportion)} & \rotatedHeader{\textbf{\niststs{}} \\ \scriptsize(x/188)} &
-\rotatedHeader{\textbf{\dieharder{}} \\ \scriptsize(x/55)}       & \rotatedHeader{\textbf{\testu{}}   \\ \scriptsize(x/159)} \\ \hline \hline
-#1
-\end{tabularx}%
+ \begin{table}[h]
+ 	
+ 	\renewcommand{\arraystretch}{1.2}
+ 	\small
+ 	\begin{tabularx}{\textwidth}{|C||C|C|C|C|C|}
+ 		\hline
+ 		\multicolumn{6}{|c|}{\textbf{#1}} \\
+ 		\hline \hline
+ 		\vspace{5pt}
+		\textbf{Runda} &
+ 		\vspace{0pt}
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Bežné uzly} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{0pt}
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Tangle} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{-10pt}
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA} \\ \scriptsize(proportion) \end{tabular} &
+		\vspace{-10pt}
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA-2} \\ \scriptsize(proportion) \end{tabular} &
+ 		\vspace{0pt}
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Decim} \\ \scriptsize(proportion) \end{tabular} \\
+ 		\hline\hline
+ 		#2
+ 		\hline
+ 		
+ 	\end{tabularx}
+ 	\caption{#3}
+ 	\label{#4}
+ \end{table}
 }
+
+% two column part
+\newcommand{\twoColumns}[2]{%
+	\begin{minipage}{0.47\textwidth}
+		\centering
+		#1
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.47\textwidth}
+		\centering
+		#2
+	\end{minipage}
+}
+
+
+
+
 
 % ===== NAME MACROS =====
 \newcommand{\eacirc}{EACirc}
@@ -216,7 +249,7 @@
 % ===== BEGIN DOCUMENT =====
 \begin{document}
 
-%\FrontMatter
+\FrontMatter
 %\ThesisTitlePage
 
 %\begin{ThesisDeclaration}
@@ -237,7 +270,7 @@
 %Klucove slova
 %\end{ThesisKeyWords}
 
-%\MainMatter
+\MainMatter
 %\tableofcontents
 
 %\input{uvod}
