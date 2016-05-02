@@ -11,17 +11,19 @@ Java je na jednu stranu vysoko úrovňový jazyk, čo znamená, že je jednoduch
 \section{Vysvetlenie skratky JVM (Java Virtual Machine)}
 \label{sec:jvm}
 
-Work in progress (Treba najst nejaku knizku o JVM) 
+JVM~\parencite{JVM} je software, čo spája kód naprogramovaný v Jave a hardware konkrétneho počítača, na ktorom tento kód spúšťame. Vďaka nemu je Java multiplatformová, pretože Javu je možné spustiť všade tam, kde beží JVM. Samotný JVM má podobné princípy ako bežný procesor, teda napríklad obsahuje zásobník, registre a vie vykonávať konečnú množinu inštrukcií.
 
-\begin{myItemize} 
-\item vysvetlenie co je to bytecode
-\item popis realneho fungovania emulacie bytecodu?
-\end{myItemize}
+Fungovanie JVM nie je nič zložitého, jednoducho obsahuje implementáciu všetkých inštrukcií a po načítaní bytecodu vykonáva jednu inštrukciu po druhej. Avšak poznať detailné fungovanie JVM nie je pre účely našej práce dôležité. Dôležité je vedieť, že aj nás JVM simulátor vykonáva inštrukcie z bytecodu. Avšak s tým rozdielom, že vykonáva náhodný kus inštrukcii, vykonáva ich v rámci uzlov EACircu a nepozná úplne všetky inštrukcie, ktoré obsahuje klasický JVM. Implementované sú zatiaľ iba tie inštrukcie s ktorými sme sa stretli v niektorom s použitých bytecodov a boli v rámci nášho simulátora implementovateľné. Ďalší rozdiel je napríklad v používaní zásobníka, v klasickom JVM má každá funkcia svoj vlastný lokálny zásobník, ktorý sa používa na predávanie argumentov, lokálne premenné atď. zatiaľ čo náš simulátor používa zásobník ako globálne úložisko, na ktoré sa ukladajú hodnoty počas celého jedného výpočtu, prislúchajúceho jednému uzlu.  
+
+\subsection{Bytecode}
+\label{subsec:bytecode}
+
+Bytecode je označenie pre súbor, ktorý je výstupom po skompilovaní Java kódu. Má presne danú štruktúru, ktorú vie vykonávať každý JVM. Je to v podstate množina funkcií, kde každá funkcia obsahuje niekoľko inštrukcií. Každý riadok z inštrukciou obsahuje číslo inštrukcie, názov inštrukcie, prípadne parametre pre inštrukciu, napríklad inštrukcia \textit{bipush} berie ako parameter číslo, ktoré vloží na zásobník. 
 
 \section{Princíp fungovania emulácie}
 \label{sec:jvm-principle}
 
-Fungovanie JVM simulátora je zložitý proces, ktorý sa skladá z viacerých bodov, avšak nie je to súvislý proces, jedná sa iba o obsluhu JVM uzlov. Zvyšok EACircu funguje tak ako pri bežných uzloch. V tejto kapitole si prejdeme celý proces krok po kroku, od zvolenia uzlu za JVM uzol až po vykonávanie konkrétnych inštrukcií a výpočet výsledku. 
+Fungovanie JVM simulátora je proces, ktorý sa skladá z viacerých bodov, avšak nie je to súvislý proces, jedná sa iba o obsluhu JVM uzlov. Zvyšok EACircu funguje tak ako pri bežných uzloch. V tejto kapitole si prejdeme celý proces krok po kroku, od zvolenia uzlu za JVM uzol až po vykonávanie konkrétnych inštrukcií a výpočet výsledku. 
 
 \subsection{Načítavanie bytecodu}
 \label{parsing-bytecode}
