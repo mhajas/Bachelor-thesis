@@ -1,36 +1,36 @@
 \chapter{Experimenty}
 \label{chap:experiments}
 
-Hlavným cieľom zavedenia JVM uzlov bolo vylepšiť úspešnosť EACircu. Na otestovanie sme preto museli vyskúšať viacero experimentov, ktoré si predstavíme v tejto kapitole, a porovnať ich výsledky s výsledkami, ktoré dosiahol EACirc s bežnými uzlami, pri rovnakých nastaveniach. 
+Hlavným cieľom zavedenia JVM uzlov bolo vylepšiť úspešnosť EACircu. Na otestovanie som preto musel vyskúšať viacero experimentov, ktoré si predstavíme v tejto kapitole, a porovnáme ich výsledky s výsledkami, ktoré dosiahol EACirc s bežnými uzlami pri rovnakých nastaveniach. 
 
-Autorom výsledkov z EACircu s bežnými uzlami, nie som ja, ale Ľubomír Obrátil, ktorému by som sa chcel za výsledky poďakovať.
+Autorom výsledkov z EACircu s bežnými uzlami nie som ja, ale pochádzajú z interných stránok EACircu. 
 
 \section{Experiment s imitáciou bežných uzlov}
 \label{sec:exp1}
 
-Prvý experiment slúžil najme na overenie, či JVM simulátor funguje korektne. Myšlienkou bolo na začiatok nepoužívať bytecode vytvorený z implementácie šifrovacej funkcie, ale skúsiť vytvoriť bytecode, ktorý bude napodobňovať bežné uzly, ktoré sa nachádzajú v EACircu. Očakávané boli podobné výsledky ako dosiahol štandardný EACirc.
+Prvý experiment slúžil najmä na overenie, či JVM simulátor funguje korektne. Myšlienkou bolo na začiatok nepoužívať bytecode vytvorený z implementácie šifrovacej funkcie, ale skúsiť vytvoriť bytecode, ktorý bude napodobňovať bežné uzly, ktoré sa nachádzajú v EACircu. Očakávané boli podobné výsledky ako dosiahol štandardný EACirc.
 
 \subsection{Použitý bytecode}
 \label{subsec:exp1-bytecode}
 
-Bytecode pre tento experiment sme museli napísať ručne, pretože si to vyžadovalo zamyslenie sa nad tým ako funguje každá jedna funkcia z bežných uzlov. Nie pri všetkých funkciách to bolo jednoduché, pretože prístup JVM simulátora je odlišný od prístupu bežných uzlov. 
+Bytecode pre tento experiment som musel napísať ručne, pretože si to vyžadovalo zamyslenie sa nad tým, ako funguje každá jedna funkcia z bežných uzlov. Nie pri všetkých funkciách to bolo jednoduché, pretože prístup JVM simulátora je odlišný od prístupu bežných uzlov. 
 
-Najväčší problém bol, že bežné uzly vykonávajú medzi všetkými vstupmi operáciu, napríklad \textit{AND, OR, XOR} atď. V prípade JVM simulátora nie je problém nájsť inštrukcie, ktoré plnia ekvivalentnú funkciu ako bežné uzly. Problém je, že bežné uzly vykonajú operáciu vždy medzi všetkými vstupmi, zatiaľ čo JVM simulátor vykoná náhodné množstvo inštrukcií, preto bolo treba premyslieť, ako ich vykonať dostatok na to, aby sa zvolená inštrukcia vykonala medzi všetkými vstupmi, teda medzi všetkými hodnotami na zásobníku. Tento problém sa dal vyriešiť tým, že by sme vykonávali vždy všetky inštrukcie funkcie, avšak toto riešenie by by bolo v rozpore so základnou myšlienkou JVM simulátora, a tou je vykonávať náhodný kus inštrukcií zo šifrovacej funkcie. Preto sme sa snažili aspoň zvýšiť pravdepodobnosť, že sa vykoná aspoň taký počet inštrukcií aký potrebujeme, a to tak, že sme pre každý typ bežného uzlu vytvorili v bytecode funkciu, a do nej vložili viac krát konkrétnu inštrukciu, a spoliehame sa na genetiku, že si vyberie dostatok inštrukcií na spracovanie všetkých hodnôt na zásobníku.
+Jednou z vecí, ktorú je zložité napodobniť v prípade JVM uzlov je, že bežné uzly vykonávajú medzi všetkými vstupmi operáciu, napríklad \textit{AND, OR, XOR} atď. V prípade JVM simulátora nie je problém nájsť inštrukcie, ktoré plnia ekvivalentnú funkciu ako bežné uzly. Problémom je, že bežné uzly vykonajú operáciu vždy medzi všetkými vstupmi, zatiaľ čo JVM simulátor vykonáva v jednom uzle náhodné množstvo inštrukcií. Preto bolo potrebné premyslieť, ako ich vykonať dostatok na to, aby sa zvolená inštrukcia vykonala medzi všetkými vstupmi, teda medzi všetkými hodnotami na zásobníku. Tento problém by sa dal vyriešiť tým, že by sme vykonávali vždy všetky inštrukcie, ktoré funkcia obsahuje, avšak toto riešenie by by bolo v rozpore so základnou myšlienkou JVM uzlov, a tou je vykonávať náhodný kus inštrukcií, ktoré pochádzajú zo šifrovacej funkcie. Je zrejmé, že ak budeme vykonávať vždy náhodnú časť inštrukcií, nie v každom prípade dosiahneme požadovanú funkcionalitu. Zvolili sme preto možnosť, že pre funkcie, ktoré potrebujú spracovať všetky hodnoty zo zásobníka, aspoň zvýšime pravdepodobnosť, že sa vybraných inštrukcií vykoná dostatok. Preto každá takáto funkcia obsahuje viackrát pod sebou vybranú inštrukciu tak, aby genetika mala pri náhodnom vyberaní inštrukcií väčšiu šancu zvoliť väčší počet inštrukcií. Inštrukciu sme vybrali podľa toho aby plnila rovnakú funkcionalitu, napríklad v prípade funkcie \textit{AND} je to inštrukcia \textit{iand}. 
 
-S týmto súvisí aj to že niektoré funkcie sa nedajú nahradiť jedinou ekvivalentnou inštrukciou, napríklad \textit{ROTL} alebo \textit{ROTR}, ktoré vykonávajú pravú respektíve ľavú rotáciu, ich implementácia obsahuje viac rôznych inštrukcií. V tomto prípade takisto nemôžeme garantovať, že sa vykoná celá funkcia, preto lebo začíname emuláciu od náhodného riadka. Dalo by sa to vyriešiť vykonávaním vždy všetkých inštrukcií vo funkcii, avšak toto riešenie by bolo v rozpore z našou predstavou ako by mal JVM simulátor fungovať, teda vykonávať v uzloch náhodný kus inštrukcií zo šifrovacej funkcie. 
+S týmto súvisí aj to, že niektoré funkcie sa nedajú nahradiť jedinou ekvivalentnou inštrukciou, napríklad \textit{ROTL} alebo \textit{ROTR}, ktoré vykonávajú pravú respektíve ľavú rotáciu. Ich implementácia obsahuje viac rôznych inštrukcií. V tomto prípade takisto nemôžeme garantovať, že sa vykoná celá funkcia preto, lebo začíname emuláciu od náhodného riadka. Podobne ako v predchádzajúcom prípade, aj tu sme nepoužili emulovanie vždy celej funkcie, kvôli rozporu so základnou myšlienkou JVM uzlov.
 
-Ďalší problém, ktorého výskyt sa ešte znásobil pri použití funkcií, ktoré vykonávajú náhodné množstvo rovnakých inštrukcií, teda potrebujú minimálne toľko hodnôt na zásobníku, aký je ich počet, je čo spraviť ak je na zásobníku nedostatočný počet hodnôt. Inými slovami čo spraviť ak potrebujeme vybrať hodnotu z prázdneho zásobníka. Z tohoto dôvodu sme museli upraviť implementáciu z nasledujúcimi možnosťami.
+Ďalší problém, ktorého výskyt sa ešte znásobil pri použití funkcií, ktoré vykonávajú náhodné množstvo rovnakých inštrukcií, je, že tieto inštrukcie potrebujú na zásobníku minimálne toľko hodnôt, aký je ich počet. Preto sme sa museli zamyslieť aj nad otázkou, ako sa zachovať, ak je na zásobníku nedostatočný počet hodnôt. Inými slovami čo spraviť, ak potrebujeme vybrať hodnotu z prázdneho zásobníka. Z tohoto dôvodu som musel upraviť implementáciu s nasledujúcimi možnosťami.
 
 \begin{myItemize}
- \item \textbf{Pri vyberaní hodnoty z prázdneho zásobníka vracať 0}\\Avšak toto riešenie sa ukázalo ako nesprávne, pretože napríklad pre inštrukciu \textit{AND}, platí, že ak vykonáme túto operáciu s 0, výsledok bude vždy 0. To znamená, že v prípade jednej hodnoty na zásobníku, vyberáme dve hodnoty zo zásobníka, z toho druhá hodnota už bude 0 a vykonávame \textit{AND} s 0 a strácame celý doterajší výpočet.
- \item \textbf{V prípade prázdneho zásobníka vracať neutrálnu hodnotu}\\Tento spôsob by vyriešil problém predchádzajúceho riešenia, pretože v prípade, že sa vyberá z prázdneho zásobníka vracala by sa taká hodnota, s použitím ktorej by sa operácia správala ako identita, teda by vrátila vždy hodnotu prvého argumentu. Avšak nevýhodou je, že implementácia takéhoto riešenia, by bola zložitejšia a taktiež je zbytočné vykonávať niečo, čo aj tak nebude mať žiadny dôsledok. 
- \item \textbf{Preskakovať inštrukcie, ktoré nemajú dostatok hodnôt na zásobníku}\\Toto riešenie sa ukázalo ako najlepšie aj čo sa týka výkonu, pretože sa nepočítajú zbytočné výpočty, aj čo sa týka vyriešenia pôvodného problému.  
+ \item \textbf{Pri vyberaní hodnoty z prázdneho zásobníka vracať 0}\\Toto riešenie sa ukázalo ako nesprávne, napríklad v súvislosti s inštrukciou \textit{AND}. Súčasťou vykonania inštrukcie AND je výber dvoch hodnôt zo zásobníka. Avšak, vo chvíli keď sa na zásobníku nachádza len jedna hodnota, simulátor vyberie práve túto jednu hodnotu a za druhú, neexistujúcu hodnotu, dosadí vždy nulu. A keďže výpočet \textit{AND-u}, v ktorom sa nachádza 0 je vždy 0, strácame celý doterajší výpočet.
+ \item \textbf{V prípade prázdneho zásobníka vracať neutrálnu hodnotu}\\Tento spôsob by vyriešil problém predchádzajúceho riešenia, pretože v prípade, keď sa vyberá z prázdneho zásobníka vracala by sa taká hodnota, s použitím ktorej by sa operácia správala ako identita, vrátila by vždy hodnotu prvého argumentu. Avšak nevýhodou je, že implementácia takéhoto riešenia by bola zložitejšia a taktiež je zbytočné vykonávať niečo, čo aj tak nebude mať žiadny dôsledok. 
+ \item \textbf{Preskakovať inštrukcie, ktoré nemajú dostatok hodnôt na zásobníku}\\Toto riešenie sme zvolili ako najlepšie z dvoch dôvodov. Prvý sa týka výkonu, nakoľko sa nepočítajú zbytočné výpočty a druhý sa týka vyriešenia pôvodného problému. 
 \end{myItemize}
 
 \subsection{Výsledky experimentu}
 \label{subsec:exp1-results}
 
-Takto vytvorený bytecode sme použili na rozlíšenie medzi náhodnými dátami a hašovacou funkciou Tangle. Výsledky nepochádzajú z poslednej verzie JVM simulátora, pretože sme ich počítali už pár mesiacov pred napísaním tejto práce. Sivé zafarbenie bunky znamená, že EACirc bol úspešný vo viac prípadoch ako je hladina významnosti, teda 5\%, to znamená číslo vo vnútri bunky je väčšie ako 0.05. Je otázne, či takto označovať aj bunky, ktoré majú tesne nad 5\%, napríklad 0.55 alebo 0.6, pretože sa môže jednať aj o štatistickú odchýlku, preto sme sa rozhodli, že takto budeme označovať len bunky, ktoré budú mať hodnotu nad 0.07. 
+Takto vytvorený bytecode sme použili na rozlíšenie medzi náhodnými dátami a hašovacou funkciou Tangle. Sivé zafarbenie bunky znamená, že EACirc bol úspešný vo viac prípadoch ako je hladina významnosti, teda 5\%, to znamená číslo vo vnútri bunky je väčšie ako 0.05. Je otázne, či takto označovať aj bunky, ktoré majú tesne nad 5\%, napríklad 0.55 alebo 0.6, pretože sa môže jednať aj o štatistickú odchýlku. Preto som sa rozhodol, že takto budem označovať len bunky, ktoré budú mať hodnotu nad 0.07. 
  
 \vspace{1em}
  \begin{table}[h]
@@ -60,28 +60,28 @@ Takto vytvorený bytecode sme použili na rozlíšenie medzi náhodnými dátami
 \label{tab:exp1}
 \end{table}
 
-Z výsledkov vyplýva, že JVM simulátor síce dokázal rozoznať tie isté rundy ako bežné uzly, avšak s menšou istotou. To znamená, napríklad pre rundu 21, že zatiaľ čo bežné uzly boli schopné v 94\% prípadoch nájsť hľadaný obvod, EACirc s JVM uzlami bol to isté schopný spraviť len v 27\% prípadoch. Dôvodom menšej úspešnosti sú zrejme nevyriešené problémy spomenuté vyššie.
+Z výsledkov v \hyperref[tab:exp1]{tabuľke 4.1} vyplýva, že JVM simulátor síce dokázal rozoznať tie isté rundy ako bežné uzly, avšak s menšou istotou. To znamená, napríklad pre rundu 21, že zatiaľ čo bežné uzly boli schopné v 94\% behov nájsť hľadaný obvod, EACirc s JVM uzlami bol to isté schopný spraviť len v 27\% behov. Dôvodom menšej úspešnosti sú zrejme nevyriešené problémy spomenuté vyššie.
 
-Pri výpočte na 300000 generáciách bolo EACircu poskytnuté 10 krát viac času na hľadanie obvodu, čiže očakávame lepšie výsledky. Avšak ani v tomto prípade, nebol EACirc s JVM uzlami schopný dotiahnuť sa na výsledky, ktoré mali bežné uzly, preto sme sa rozhodli pokračovať v testovaní na ďalší experiment v ktorom už budú použité bytecody zo šifrovacích respektíve hašovacích funkcií.
+Pri výpočte na 300000 generáciách bolo EACircu poskytnuté 10 krát viac generácií na hľadanie obvodu, čiže sú očakávané lepšie výsledky. Avšak ani v tomto prípade nedosiahol EACirc s JVM uzlami lepšie výsledky ako mali bežné uzly. Preto som sa rozhodol pokračovať v testovaní ďalšieho experimentu, v ktorom už budú použité bytecody zo šifrovacích respektíve hašovacích funkcií.
 
-\section{Experiment JVM simulátora na malom testbede}
+\section{Experiment s bytecodom z kandidátnych funkcií SHA3 a eStream}
 \label{sec:exp2}
 
-Malý testbed je označenie, ktoré používame v našom tíme, na pomenovanie niekoľkých funkcií, patria sem hašovacie funkcie zo sútaže na funkciu SHA-3: \textit{Tangle, Dynamic SHA, Dynamic SHA-2} a prúdová šifrovacia funkcia z kandidátov na funkciu eStream: \textit{Decim}. Experiment spočíval v tom, že sme z týchto všetkých funkcií vytvorili bytecode a spustili všetky kombinácie výpočtov. Teda každú funkciu v kombinácii s každým bytecodom. Motivácia za týmto experimentom je zistiť, či bude EACirc úspešnejší, keď bude v uzloch, pomocou JVM simulátora, vykonávať inštrukcie zo skúmanej šifrovacej funkcie. 
+V tomto experimente som plnohodnotne využil najväčšiu výhodu JVM uzlov a to použitie bytecodu z reálnych funkcií,  konkrétne z hašovacích funkcií zo sútaže na funkciu SHA-3: \textit{Tangle, Dynamic SHA, Dynamic SHA-2} a z prúdovej šifrovacej funkcie z kandidátov na funkciu eStream: \textit{Decim}. Experiment spočíval v tom, že som z týchto všetkých funkcií vytvoril bytecode a spustil všetky kombinácie výpočtov, teda každú funkciu v kombinácii s každým bytecodom. Motivácia za týmto experimentom je zistiť, či bude EACirc úspešnejší, keď bude v uzloch, pomocou JVM simulátora, vykonávať inštrukcie zo skúmanej šifrovacej funkcie. 
 
 \section{Použité bytecody}
 \label{sec:exp2-bytecode}
 
-Naneštastie sa nám nepodarilo nájsť implementáciu ani jednej z týchto funkcií v Jave, preto sme museli vytvoriť vlastnú. Najjednoduchšie riešenie pre nás bolo prepísať implementáciu z C++, ktorá je dostupná napríklad aj priamo v EACircu, do Javy. K prepisu nám pomohla voľná verzia konvertoru~\parencite{c++-java-converter} z C++ do Javy, od spoločnosti \textit{Tangible Software Solutions Inc}. Po konvertovaní sme museli ešte manuálne upraviť Java súbor tak, aby bol kompilovateľný, pretože niektoré konštrukcie z C++ sa nedali automaticky skonvertovať do Javy, napríklad práca s pamäťou alebo smerníková aritmetika. Takáto implementácia by pravdepodobne nebola funkčná ani korektná, ale na naše účely, teda na využitie inštrukcií, je postačujúca. 
+Naneštastie sa mi nepodarilo nájsť implementáciu ani jednej z týchto funkcií v Jave, preto som musel vytvoriť vlastnú. Najjednoduchšie riešenie, na ktoré som prišiel, bolo prepísať implementáciu z C++, ktorá je dostupná napríklad aj priamo v EACircu, do Javy. K prepisu mi pomohla voľná verzia konvertoru~\parencite{c++-java-converter} z C++ do Javy, od spoločnosti \textit{Tangible Software Solutions Inc}. Po konvertovaní som musel ešte manuálne upraviť Java súbor tak, aby bol kompilovateľný, pretože niektoré konštrukcie z C++ sa nedali automaticky skonvertovať do Javy, napríklad práca s pamäťou alebo smerníková aritmetika. Implementácia, ktorá vznikla týmito krokmi by zrejme nebola plne funkčná ani korektná, ale na naše účely, teda na využitie inštrukcií, je postačujúca. 
 
-Takto vytvorenú implementáciu sme potom jednoducho skompilovali a zo skompilovaného súboru získali konkrétne inštrukcie. Vzniknutý súbor s bytecodom bolo treba jemne upraviť, aby si s ním poradila funkcia na načítavanie bytecodu, ktorú obsahuje JVM simulátor, napríklad vymazať niektoré tabulátory a podobne. Posledným krokom bolo implementovanie inštrukcií, ktoré JVM simulátor zatiaľ nepoznal, pretože inak by načítavanie zlyhalo.
+Takto vytvorenú implementáciu som potom jednoducho skompiloval a zo skompilovaného súboru získal konkrétne inštrukcie. Vzniknutý súbor s bytecodom bolo treba jemne upraviť, aby si s ním poradila funkcia na načítavanie bytecodu, ktorú obsahuje JVM simulátor. Išlo napríklad o vymazanie niektorých tabulátorov a podobne. Posledným krokom bolo implementovanie inštrukcií, ktoré JVM simulátor zatiaľ nepoznal, pretože inak by načítavanie zlyhalo. Nie v každom prípade bolo potrebné inštrukcie aj implementovať (\hyperref[sec:impl-diff]{viac sekcii 3.5}).
 
 \section{Výsledky experimentu}
 \label{sec:exp2-results}
 
-Pre každú funkciu z malého testbedu, sme spočítali 3 rundy, konkrétne poslednú rundu, ktorú zvládne EACirc s bežnými uzlami plus nasledujúca a predchádzajúca. Ďalej sme pre každú rundu sme spočítali kombináciu s každým bytecodom, dohromady teda 4 výpočty na každú rundu, pretože máme 4 bytecody. To znamená, že dohromady sme mali 12 rôznych výpočtov pre každú funkciu. Každý z 12-tich výpočtov sme spustili 1000 krát to znamená dovedna sme mali pre jednu funkciu 12000 behov EACircu. Výpočty sme počítali na metacentre~\parencite{metacentrum}, kde sa behy spúšťajú v rámci tzv. úloh. V rámci jednej úlohy sme vypočítali 8 behov za menej ako dva dni, záležalo na akom stroji sa úloha počítala, niektoré zvládli všetkých 8 behov za 10 hodín a niektorým to trvalo aj 30 hodín. To znamená, že sme potrebovali pre jednu funkciu spočítať 1500 úloh, čo sme boli schopný vďaka metacentru urobiť za 2 až 3 dni, pretože nám naraz priradili až 800 strojov. 
+Pre každú funkciu, som spustil výpočty pre 3 rundy. Rundy som vyberal podľa úspešnosti bežných uzlov tak, že som našiel poslednú rundu, kde sme označili EACirc s bežnými uzlami za úspešný a do mojich výpočtov zahrnul túto rundu plus predchádzajúcu a nasledujúcu. Pre každú rundu som spustil výpočty v kombinácií s každým bytecodom, dohromady teda 4 výpočty na každú rundu, pretože máme 4 bytecody. To znamená, že dohromady som spustil 12 rôznych výpočtov pre každú funkciu. Každý z 12-tich výpočtov sme spustili 1000 krát, čo znamená, že dovedna som potreboval vypočítať pre jednu funkciu 12000 behov EACircu. Výpočty som spúštal na metacentre~\parencite{metacentrum}, kde sa behy spúšťajú v rámci tzv. úloh. V rámci jednej úlohy zvládlo metacentrum vypočítať 8 behov za menej ako dva dni. Dĺžka výpočtu závisela od stroja, na ktorom sa úloha počítala. Niektoré zvládli všetkých 8 behov za 10 hodín, zatiaľ čo niektorým to trvalo aj 30 hodín. Keďže metacentrum naraz priraďuje až 800 virtuálnych strojov s jedným procesorom, všetky úlohy pre jednu funkciu sa stihli vypočítať za približne 2 až 3 dni. 
 
-Pre výsledky platí to isté čo v predchádzajúcom experimente, šedo podfarbené bunky znamenajú, že EACirc bol úspešný a našiel obvod vo viac ako 5\% prípadov, plus štatistická odchýlka.
+Pre výsledky platí to isté čo v predchádzajúcom experimente a teda, že šedo podfarbené bunky znamenajú, že EACirc bol úspešný a našiel obvod vo viac ako 5\% prípadov, plus štatistická odchýlka.
 
 \resultsTable
 {Výsledky pre funkciu Tangle}
@@ -109,7 +109,7 @@ Pre výsledky platí to isté čo v predchádzajúcom experimente, šedo podfarb
 {Výsledky pre funkciu Dynamic SHA, prvý riadok určuje aký bytecode bol použitý.}
 {tab:exp2-dynamic-sha}
 
-Výpočet z \hyperref[tab:exp2-dynamic-sha]{tabuľky 4.3} je trochu prekvapivý, pretože EACirc je schopný rozlíšiť všetky rundy funkcie \textit{Dynamic SHA}, zatiaľ čo štatistické sady (\hyperref[chap:statistic-tests]{kapitola 1.}) sú schopné rozoznať funkciu len po rundu 7. Štatistické testy boli spustené nad dátami, ktoré vygeneroval generátor, ktorý obsahuje EACirc, z toho vyplýva, že chybu generátora môžeme vylúčiť. To znamená, že buď je funkcia zlá v niečom čo štatistické testy netestujú, alebo sa v implementácii EACircu nachádza chyba, ktorú sme prehliadli. 
+Výpočet z \hyperref[tab:exp2-dynamic-sha]{tabuľky 4.3} je trochu prekvapivý, pretože EACirc, dokonca aj s bežnými uzlami, je schopný rozlíšiť všetky rundy funkcie \textit{Dynamic SHA}, zatiaľ čo štatistické sady (\hyperref[chap:statistic-tests]{kapitola 1.}) sú schopné rozoznať funkciu len po rundu 7. Štatistické testy boli spustené nad dátami, ktoré vygeneroval generátor, ktorý obsahuje EACirc. Z toho vyplýva, že chybu generátora môžeme vylúčiť a funkcia buď nespĺňa niektorú z požiadaviek na náhodnosť, ktorú štatistické testy netestujú, alebo sa v implementácii EACircu nachádza chyba, ktorú sme prehliadli. 
 
 \resultsTable
 {Výsledky pre funkciu Dynamic SHA-2}
@@ -135,7 +135,7 @@ Výpočet z \hyperref[tab:exp2-dynamic-sha]{tabuľky 4.3} je trochu prekvapivý,
 {Výsledky pre funkciu Decim, prvý riadok určuje aký bytecode bol použitý.}
 {tab:exp2-decim}
 
-Výsledky z tabuliek \hyperref[tab:exp2-tangle]{4.2} až \hyperref[tab:exp2-decim]{4.5}, sú jemne chaotické, nenašli sme v nich žiadnu spojitosť medzi skúmanou funkciou a bytecodom z tej istej funkcie. Ba dokonca ani jeden z bytecodov sa nedá vyhlásiť za najlepší. Avšak pozitívne je, že narozdiel od \hyperref[sec:exp1]{experimentu 1} dosiahli JVM uzly porovnateľné výsledky vo väčšine prípadov, ako bežné uzly. Najhoršie výsledky sme dosiahli v prípade funkcie Decim, preto sme sa rozhodli, že na tejto funkcii vyskúšame výpočty s viac generáciami. Počet generácií sme zvolili na 300000, to znamená, že každý beh EACircu, bude trvať 10 násobne dlhšie. Z dôvodu veľmi dlhého výpočtu, sme museli znížiť počet behov z 1000 na 400. 
+Výsledky z tabuliek \hyperref[tab:exp2-tangle]{4.2} až \hyperref[tab:exp2-decim]{4.5}, sú trochu nejednoznačné. Z môjho pohľadu som v nich nenašiel žiadnu spojitosť medzi skúmanou funkciou a bytecodom z tej istej funkcie. Ba dokonca ani jeden z bytecodov sa nedá vyhlásiť za najlepší. Avšak pozitívne je, že na rozdiel od \hyperref[sec:exp1]{experimentu 1} dosiahli JVM uzly vo väčšine prípadoch porovnateľné výsledky ako bežné uzly. Najhoršie výsledky sme dosiahli v prípade funkcie Decim, preto sme sa rozhodli, že na tejto funkcii vyskúšame výpočty s viac generáciami. Počet generácií sme zvolili na 300000, tým pádom bude každý beh EACircu vylepšovať výsledný obvod 10-krát dlhšie. Z dôvodu veľmi dlhého výpočtu, sme museli znížiť počet behov z 1000 na 400. 
 
 \begin{table}[ht]
 	
@@ -156,11 +156,11 @@ Výsledky z tabuliek \hyperref[tab:exp2-tangle]{4.2} až \hyperref[tab:exp2-deci
 		\vspace{0pt}
 		\begin{tabular}[b]{@{}c}\small\textbf{Decim} \\ \scriptsize(proportion) \end{tabular} \\
 		\hline\hline
-		4 & TBD & TBD & TBD & TBD \\
+		4 & 1.000\cc & 0.954\cc & 0.967\cc & 0.659\cc \\
 		\hline
-		5 & TBD & TBD & TBD & TBD \\
+		5 & 0.669\cc & 0.453\cc & 0.465\cc & 0.320\cc \\
 		\hline
-		6 & TBD & TBD & TBD & TBD \\
+		6 & 0.039 & 0.061 & 0.048 & 0.058 \\
 		\hline
 		
 	\end{tabularx}
@@ -168,16 +168,15 @@ Výsledky z tabuliek \hyperref[tab:exp2-tangle]{4.2} až \hyperref[tab:exp2-deci
 	\label{tab:exp2-decim-300k}
 \end{table}
 
-\hyperref[tab:exp2-decim-300k]{Tabuľka 4.6} neobsahuje výsledky pre bežné uzly, pretože bežné uzly sme nepočítali na 300000 generácií, výsledky sa dajú porovnať s výsledkami z \hyperref[tab:exp2-decim]{tabuľky 4.5}, konkrétne stĺpec z označením bežné uzly, avšak treba brať na vedomie, že bežné uzly mali na hľadanie obvodu 10-krát menej času.
+\hyperref[tab:exp2-decim-300k]{Tabuľka 4.6} neobsahuje výsledky pre bežné uzly, pretože výsledky pre bežné uzly s 300000 generáciami nemáme k dispozícií. Výsledky sa dajú porovnať s výsledkami z \hyperref[tab:exp2-decim]{tabuľky 4.5}, konkrétne stĺpec s označením bežné uzly. Treba však brať na vedomie, že bežné uzly hľadali obvod 10-krát menej generácií. Čo sa týka výsledkov, nie je v nich nič prekvapivé, zase sme sa trochu priblížili k výsledkom, ktoré dosiahol EACirc s bežnými uzlami na 30000 generáciách. 
 
-Zhrnutie výsledkov, po dopočítaní výpočtov.
 
 \section{Výpočty so zložitejším bytecodom}
 \label{sec:exp3}
 
-Ďalší a zároveň posledný experiment, ktorý sme vyskúšali, bolo použiť v JVM simulátore bytecode, ktorý obsahuje zložitejšie konštrukcie. Otázkou teda je, či bude genetika schopná využiť takéto konštrukcie na zhotovenie lepších obvodov. Na vytvorenie bytecodu sme použili implementáciu šifrovacej funkcie AES~\parencite{AES-FIPS}.
+Ďalší a zároveň posledný experiment, ktorý som vyskúšal, bol postavený na myšlienke použitia bytecodu, ktorý obsahuje zložitejšie konštrukcie. Otázkou teda je, či bude genetika schopná využiť takéto konštrukcie na zhotovenie lepších obvodov. Na vytvorenie bytecodu sme použili implementáciu šifrovacej funkcie AES~\parencite{AES-FIPS}.
 
-Nastavenia pre tento experiment, boli rovnaké ako v \hyperref[sec:exp2]{experiemente 2.} teda 30000 generácií, 1000 testovacích vektorov a 1000 behov. Takisto sme pre funkciu Decim spočítali aj verziu s 300000 generáciami a 400 behmi. 
+Nastavenia pre tento experiment boli rovnaké, ako v \hyperref[sec:exp2]{experiemente 2.}, teda 30000 generácií, 1000 testovacích vektorov a 1000 behov. Takisto som pre funkciu Decim spustil výpočty aj pre verziu s 300000 generáciami a 400 behmi. 
 	\begin{table}[ht]
 \twoColumns{		
 		\renewcommand{\arraystretch}{1.2}
@@ -276,11 +275,11 @@ Nastavenia pre tento experiment, boli rovnaké ako v \hyperref[sec:exp2]{experie
 		
 		\textbf{Proportion} \\
 		\hline\hline
-		4 & TBD \\
+		4 & 1.000\cc \\
 		\hline
-		5 & TBD \\
+		5 & 0.982\cc \\
 		\hline
-		6 & TBD  \\
+		6 & 0.072\cc  \\
 		\hline
 		
 	\end{tabularx}
@@ -289,7 +288,9 @@ Nastavenia pre tento experiment, boli rovnaké ako v \hyperref[sec:exp2]{experie
 
 \end{table}
 
-Z tabuliek \hyperref[tab:exp3-tangle]{4.7} až \hyperref[tab:exp3-decim-300k]{4.11} vyplýva, že EACirc s bytecodom z funkcie AES sa úspešnosťou vyrovnáva použitím bytecodu z funkcií v predchádzajúcom \hyperref[sec:exp2]{experimente} až na funkciu Decim kde je výrazne lepší, avšak stále sa nevyrovnáva úspešnosti bežných uzlov (\hyperref[tab:exp2-decim]{tabuľka 4.5}). Z toho vyplýva, že môžeme potvrdiť, že použitie zložitejšieho bytecodu je pre genetiku v niektorých prípadoch výhodné.
+Z tabuliek \hyperref[tab:exp3-tangle]{4.7} až \hyperref[tab:exp3-decimk]{4.10} vyplýva, že EACirc s bytecodom z funkcie AES sa úspešnosťou vyrovnáva použitiu bytecodu z funkcií v predchádzajúcom \hyperref[sec:exp2]{experimente} až na funkciu Decim, kde dosiahol výrazne lepších výsledkov, avšak stále sa nevyrovnáva úspešnosti bežných uzlov (\hyperref[tab:exp2-decim]{tabuľka 4.5}). Z toho vyplýva, že môžeme potvrdiť, že použitie zložitejšieho bytecodu je pre genetiku v niektorých prípadoch výhodné.
+
+Vo výsledkoch v \hyperref[tab:exp3-decim-300k]{tabuľke 4.11} sa podarilo JVM uzlom prekonať EACirc s bežnými uzlami. Avšak bežné uzly boli spúštané len s 30000 generáciami, takže mali na hľadanie výsledného obvodu mali 10 krát menej generácií. Dokonca sa nám podarilo prekonať bežné uzly o jednu rundu, aj keď iba veľmi tesne a je otázne, či sa náhodou nejedná len o štatistickú odchýlku. 
 
 
 
