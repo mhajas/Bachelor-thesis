@@ -204,15 +204,15 @@
 	 	\multicolumn{5}{c|}{\textbf{Bytecode z funkcie}} \\\cline{2-6}
  		&
  		\vspace{0pt}
- 		\begin{tabular}[b]{@{}c}\small\textbf{Bežné uzly} \\ \scriptsize(pomer úspešných) \end{tabular} &
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Bežné uzly} \\ \scriptsize(podiel úspešných) \end{tabular} &
 		\vspace{0pt}
- 		\begin{tabular}[b]{@{}c}\small\textbf{Tangle} \\ \scriptsize(pomer úspešných) \end{tabular} &
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Tangle} \\ \scriptsize(podiel úspešných) \end{tabular} &
 		\vspace{-10pt}
- 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA} \\ \scriptsize(pomer úspešných) \end{tabular} &
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA} \\ \scriptsize(podiel úspešných) \end{tabular} &
 		\vspace{-10pt}
- 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA-2} \\ \scriptsize(pomer úspešných) \end{tabular} &
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Dynamic} \\ \small\textbf{SHA-2} \\ \scriptsize(podiel úspešných) \end{tabular} &
  		\vspace{0pt}
- 		\begin{tabular}[b]{@{}c}\small\textbf{Decim} \\ \scriptsize(pomer úspešných) \end{tabular} \\
+ 		\begin{tabular}[b]{@{}c}\small\textbf{Decim} \\ \scriptsize(podiel úspešných) \end{tabular} \\
  		\hline\hline
  		#2
  		\hline
@@ -253,41 +253,52 @@
 \FrontMatter
 \ThesisTitlePage
 
+\newpage\null\thispagestyle{empty}\newpage
 \begin{ThesisDeclaration}
 \DeclarationText
 \AdvisorName
 \end{ThesisDeclaration}
+\newpage\null\thispagestyle{empty}\newpage
 
 \begin{ThesisThanks}
-Týmto by som sa chcel poďakovať Ing. Mgr. et Mgr. Zdeňkovi Říhovi, Ph.D., za vedenie bakalárskej práce a čas strávený podávaním rád a pripomienok. Takisto by som sa chcel poďakovať celému tímu, ktorý pracuje na projekte EACirc, za možnosť zapojiť sa do vylepšovania tohoto nástroja a za množstvo nových vedomostí, ktoré som sa pri spolupráci s nimi naučil, ale aj laboratóriu CRoCS na Fakulte informatiky Masarykovej univerzity a českej národnej gridovej infraštruktúre MetaCentrum za poskytnutie výpočtových prostriedkov.
+Týmto by som sa chcel poďakovať Ing. Mgr. et Mgr. Zdeňkovi Říhovi, Ph.D., za vedenie bakalárskej práce a čas strávený podávaním rád a pripomienok. Takisto by som sa chcel poďakovať celému tímu, ktorý pracuje na projekte EACirc, ale aj laboratóriu CRoCS na Fakulte informatiky Masarykovej univerzity za možnosť zapojiť sa do vylepšovania tohto nástroja a za množstvo nových vedomostí, ktoré som sa pri spolupráci s nimi naučil. 
+
+Oceňujem aj možnosť pristupovať k výpočtovým a úložným zdrojom, ktoré patria Národnej Gridovej Infraštruktúre MetaCentrum a sú poskytované pod programom "Projects of Large Research, Development, and Innovations Infrastructures" (CESNET LM2015042).
 
 V neposlednom rade ďakujem aj svojim rodičom, sestre, priateľke a všetkým kamarátom za to, že ma počas celého štúdia podporovali a pomáhali mi nielen pri úprave tejto práce.
 
-Access to computing and storage facilities owned by parties and projects contributing to the National Grid Infrastructure MetaCentrum, provided under the programme "Projects of Large Research, Development, and Innovations Infrastructures" (CESNET LM2015042), is greatly appreciated.
 \end{ThesisThanks}
+\newpage\null\thispagestyle{empty}\newpage
 
 \begin{ThesisAbstract}
-Táto práca ukazuje rôzne možnosti ako testovať náhodnosť a predstavuje nový nástroj ako alternatívu k nástrojom, ktoré sa na testovanie náhodnosti bežné používajú. Jej cieľom je vytvoriť a popísať rozšírenie frameworku EACirc o simulátor Java bytecodu, teda upraviť jeho implementáciu tak, aby počas behu využíval inštrukcie, ktoré pochádzajú z programu, ktorý je napísaný v jazyku Java. Vytvorená implementácia je ďalej otestovaná a výsledky sú porovnané s výsledkami, ktoré dosiahla implementácia bez tohoto rozšírenia.  
+Táto práca ukazuje rôzne možnosti ako testovať náhodnosť a predstavuje nový nástroj ako alternatívu k nástrojom, ktoré sa na testovanie náhodnosti bežné používajú. Jej cieľom je vytvoriť a popísať rozšírenie frameworku EACirc o simulátor Java bytecodu, teda upraviť jeho implementáciu tak, aby počas behu využíval inštrukcie, ktoré pochádzajú z programu, ktorý je napísaný v jazyku Java. Vytvorená implementácia je ďalej otestovaná a výsledky sú porovnané s výsledkami, ktoré dosiahla implementácia bez tohto rozšírenia.  
 \end{ThesisAbstract}
+\newpage\null\thispagestyle{empty}\newpage
 
 \chapter*{Abstract}
 This thesis presents several ways how to test randomness and introduce new tool as an alternative to tools which are mostly used for testing randomness.  The primary goal of this thesis is to implement and describe simulator of Java bytecode as an extension of framework EACirc. Which means to enhance implementation of framework EACirc so that it would be possible to use instructions, which comes from a programme, that is programmed in Java language.  Created implementation is tested and the results are compared to results, which was achieved by implementation without this extension.
 
+\newpage\null\thispagestyle{empty}\newpage
+
 \begin{ThesisKeyWords}
 bytecode, CRoCS, EACirc, Java virtual machine, JVM, testovanie náhodnosti, inštrukcie, štatistické testy, genetické programovanie, samovzdelávací algoritmus
 \end{ThesisKeyWords}
+\newpage\null\thispagestyle{empty}\newpage
 
 
 
 \MainMatter
 \tableofcontents
-
+\newpage\null\thispagestyle{empty}\newpage
 \input{uvod}
 \input{chapter1}
+\newpage\null\thispagestyle{empty}\newpage
 \input{chapter2}
 \input{chapter3}
 \input{chapter4}
 \input{zaver}
+
+\newpage\null\thispagestyle{empty}\newpage
 
 % ===== APPENDIX AND BIBLIOGRAPHY =====
 \appendix
@@ -296,5 +307,18 @@ bytecode, CRoCS, EACirc, Java virtual machine, JVM, testovanie náhodnosti, inš
 \nocite{*}
 % print complete bibliography
 \printbibliography[title={Bibliografia}]
+
+\chapter*{A Príloha}
+\label{chap:attachments}
+\addcontentsline{toc}{chapter}{A \textbf{Príloha}}
+
+Prílohy sú dostupné v úschovni\footnote{\url{http://is.muni.cz/th/422190/fi_b/}} a obsahujú nasledujúce položky:
+\begin{myItemize}
+	\item \textbf{jvm-simulator}\\Implementácia JVM simulátora
+	\item \textbf{konfiguracne-subory}\\Niekoľko príkladov ako vyzerá konfiguračný súbor
+	\item \textbf{pouzite-bytecody}\\Všetky bytecody spomenuté v \hyperref[chap:experiments]{kapitole 4}
+	\item \textbf{thesis-zdroj}\\Zdrojový kód práce, ktorý obsahuje aj bibliografiu a použité obrázky
+\end{myItemize}
+
 
 \end{document}
